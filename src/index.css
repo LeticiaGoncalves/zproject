@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@layer components {
+    .my-input {
+      @apply bg-gray-50 mt-6 focus:outline-none border border-gray-300 rounded-lg py-2 px-4 block w-full appearance-none leading-normal;
+    };
+    .my-disclaimer {
+        @apply  italic text-sm text-red-400;
+    }
+    .confirm-btn {
+        @apply bg-green-500 hover:bg-green-300 text-white font-bold py-4 px-10 rounded;
+    }
+    .cancel-btn {
+        @apply border-green-500 border-2 bg-white hover:bg-green-100 text-green-500 font-bold py-4 px-10 rounded;
+    }
+    .label {
+        @apply font-bold mr-3;
+    }
+  }
