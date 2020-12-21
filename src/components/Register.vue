@@ -48,10 +48,8 @@
             <span v-if="(!$v.user.phone.required || !$v.user.phone.minLength ) && $v.user.phone.$dirty" class="my-disclaimer">Insira telefone válido</span>
           </div>
         </div>
-
         <div class="flex ">
           <div class="flex-grow mr-3">
-
             <vc-date-picker v-model="user.birthDate"> 
               <template  v-slot="{ inputValue, inputEvents }"> 
                 <input
@@ -62,10 +60,8 @@
                 />
               </template>
             </vc-date-picker>
-
             <span v-if="(!$v.user.birthDate.required || !$v.user.birthDate.minLength ) && $v.user.birthDate.$dirty" class="my-disclaimer">Insira data de aniverário</span>
           </div>
-
           <div  class="flex flex-grow-3  items-center self-center">
             <p class="mr-3">Gênero:</p>
             <div>
@@ -131,10 +127,8 @@
            <span v-if="(!$v.user.state.required || !$v.user.state.minLength ) && $v.user.street.$dirty" class="my-disclaimer">Insira nome da rua</span>
           </div>
         </div>
-
         <div
-          class="text-center mt-6 bg-green-50 border-2	 border-green-200 border-dashed	h-50"
-        >
+          class="text-center mt-6 bg-green-50 border-2	 border-green-200 border-dashed	h-50">
           <p class=" text-center mt-6 mb-4 font-bold text-gray-500">
             Insira uma foto de perfil
           </p>
@@ -153,20 +147,13 @@
           placeholder="Valor em conta corrente"
         />
         <span v-if="(!$v.user.amountInAccount.required || !$v.user.amountInAccount.minLength ) && $v.user.amountInAccount.$dirty" class="my-disclaimer">Insira o valor atual em conta</span>
-
-        
         <div class="flex mt-12" >
           <button v-if="isEdit" @click="cancelRegistration()" class="cancel-btn flex-grow mr-3">Cancelar</button>
           <button v-if="!isEdit" @click.prevent="registerUser(user)" class="confirm-btn flex-grow">Cadastrar</button>
           <button v-if="isEdit" @click.prevent="updateUser(user)" class="confirm-btn flex-grow">Salvar ediaçao</button>
         </div>
-        
       </form>
     </div>
-
-   
-
-  
   <div v-for="user in users" :key="user.id" class="border-2 rounded-md shadow-lg  p-7 my-7">
     <h1 class="mb-3">{{ user.name }}</h1>
     <div><span class="label">Email:</span>{{ user.email }}</div>
@@ -182,14 +169,17 @@
       <button class="confirm-btn bg-red-400" @click.prevent="removeUser(user.id)">Apagar cadastro</button>
     </div>
   </div>
-  
   </div>
-  
-
-
-  
+<!--
+* não subir código com console.log
+* Salvar está dando um reload - não pode dar reload pq pesa a aplicação
+* Bloquear cadastro vazio ( validação do form não está ok )
+* Criar confirmação ao realizar operação de excluir cadastro
+* criar um modo de gerenciar o ID
+* Evitar repetição de código, caso ocorra criar funções específicas, com nomes descritivos de fácil entendimento.
+* exibir o path da imagem ao salvar 
+  -->
 </template>
-
 <script>
 import { required, minLength, email } from 'vuelidate/lib/validators'
 import axios from 'axios'
@@ -199,22 +189,8 @@ export default {
   data() {
     return {
       users: [],
-      user: {
-        id:'',
-        name: '',
-        email: '',
-        cpf: '', 
-        phone: '',
-        birthDate: Date,
-        gender: ' ',
-        cep: '',
-        street: '',
-        number: '',
-        city: '',
-        state: '',
-        photo: null,
-        amountInAccount: Number,
-      },
+      user: {},
+      //userToSave : {}, depois a gente pensa nisso.
       isEdit: false
     };
   },
@@ -275,19 +251,44 @@ export default {
   },
   created() {
       this.users = JSON.parse(localStorage.getItem('usersApp'));
+      this.user = this.createUserFromScratch()
   },
   methods: {
+    createUserFromScratch () {
+      return {
+        id:'', // o número tem q ser incrementado, a partir do zero. Criar uma função pra incrementar o id a partir do zero.
+        // saber se tem algum usuário salvo, se tiver pega o id e soma 1. senão começa do zero.
+        // criar um campo no formulário, para exibir o id do usuário ( o campo pode ser um label ou um input desabilitado.)
+        name: '',
+        email: '',
+        cpf: '', 
+        phone: '',
+        birthDate: '',
+        gender: ' ',
+        cep: '',
+        street: '',
+        number: '',
+        city: '',
+        state: '',
+        photo: null,
+        amountInAccount: 0,
+      } 
+    },
     searchCep(){
-        axios.get(`https://viacep.com.br/ws/${ this.user.cep }/json/`)
-        .then( response => {
+      if(this.user.cep.length === 8) {
+         axios.get(`https://viacep.com.br/ws/${ this.user.cep }/json/`)
+        .then( (response) => {
               console.log(response.data);
               this.user.street = response.data.logradouro,
               this.user.city = response.data.localidade,
               this.user.state = response.data.uf
         })
-        .catch( error => console.log(error))
+        .catch( (error) => console.log(error))
+      }
     },
-
+    submitForm () {
+      this.registerUser()
+    },
     onFileSelected(event) {
       console.log(event);
       this.photo = event.target.files[0];
@@ -298,11 +299,8 @@ export default {
       this.users.push(newUser);
     }, */
 
-    registerUser(user){
-     /*  
-      if(!this.$v.$invalid) {
-        console.log('invalid form')
-      } */
+    registerUser(user){ // mudar pra saveUser()
+     
       this.$v.$touch();
       let users = localStorage.getItem('usersApp');
       user.id = new Date().getTime();
@@ -316,10 +314,11 @@ export default {
       }
       this.users = users;
       localStorage.setItem('usersApp', JSON.stringify(users))
-      this.$router.go();
+      //this.$router.go();
+      this.user = this.createUserFromScratch()
     },
 
-    removeUser(userId) {
+    removeUser(userId) { 
       console.log('chamou o remove user')
 
       let users = localStorage.getItem('usersApp');
@@ -340,7 +339,7 @@ export default {
     },
     updateUser(user){
      let users = this.users.map( userMap => {
-       if (userMap.id == user.id) {
+       if (userMap.id === user.id) {    
          return user;
        }
        return userMap;
@@ -351,23 +350,11 @@ export default {
      
      localStorage.setItem = ('usersApp', JSON.stringify(users));
 
-      location.reload();
+     // location.reload(); não faz isso pelo amor de Deus XD 
+    this.user = this.createUserFromScratch()
     },
-
     cancelRegistration: function() {
-     /*  this.name = ''
-       this.email = '',
-       this.cpf = '', 
-       this.phone = '',
-       this.birthDate = '',
-       this.gender = null,
-       this.cep = '',
-       this.street = '',
-       this.number = '',
-       this.city = '',
-       this.state = '',
-       this.photo = null,
-       this.amountInAccount = Number;  */      
+     this.user = this.createUserFromScratch() 
     }
   }
 };
